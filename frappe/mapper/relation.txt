@@ -1,0 +1,7 @@
+ERPNext									Odoo
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Supplier								Vendor
+- Customer->accounting					- accounting
+- Individual
+- Company
