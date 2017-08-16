@@ -18,27 +18,37 @@ class DataMigrationPlan(Document):
 
 			for d in app.mappings:
 				mapping = frappe.get_doc('Data Migration Mapping', d.mapping)
-				data = source_connector.get_objects(mapping.source_objectname, mapping.condition)
+				data = source_connector.get_objects(mapping.source_objectname, mapping.condition, "*")
 				make_custom_fields(mapping.target_doctype)
 
 				for i, source in enumerate(data):
-					
-					flag = frappe.db.get_value(mapping.target_doctype, {'primary_key': source.get('id')})
+
+					flag = frappe.db.get_value(mapping.target_doctype, {'migration_key': source.get('id')})
+
 					if flag:
 						target = frappe.get_doc(mapping.target_doctype, flag)
 					else:
 						primary_name = mapping.mapping_details[0].target_fieldname
 						primary_value = source.get(mapping.mapping_details[0].source_fieldname)
 						flag_2 = frappe.db.get_value(mapping.target_doctype, {primary_name: primary_value})
+
 						if flag_2:
 							target = frappe.get_doc(mapping.target_doctype, flag_2)
 						else :
 							target = frappe.new_doc(mapping.target_doctype)
 
-					target.set('primary_key', source.get('id'))
+					target.set('migration_key', source.get('id'))
 
 					for field in mapping.mapping_details:
-						target.set(field.target_fieldname, source.get(field.source_fieldname))
+						source_field = field.source_fieldname
+
+						if '.' in  source_field:
+							arr = source_field.split('.')
+							join_data = source_connector.get_join_objects(mapping.source_objectname, arr, source.get('id'))
+
+							target.set(field.target_fieldname, join_data[0][arr[2]])
+						else:
+							target.set(field.target_fieldname, source.get(source_field))
 
 					# post process
 					if mapping.post_process:
@@ -80,18 +90,3 @@ def make_custom_fields(dt):
 			'read_only': 1,
 			'unique': 1,
 		})
-	# custom_fields = {
-	# 	dt: [
-	# 		dict(fieldname='primary_key', label='Primary Key',
-	# 			fieldtype='Data', hidden=1, read_only=1, unique=1)
-	# 	],
-	# }
-	# for doctype, fields in custom_fields.items():
-	# 	for df in fields:
-	# 		field = frappe.db.get_value("Custom Field", {"dt": doctype, "fieldname": df["fieldname"]})
-	# 		if not field:
-	# 			create_custom_field(doctype, df)
-	# 		else:
-	# 			custom_field = frappe.get_doc("Custom Field", field)
-	# 			custom_field.update(df)
-	# 			custom_field.save()
