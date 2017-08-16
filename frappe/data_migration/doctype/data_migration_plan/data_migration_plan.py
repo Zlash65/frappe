@@ -44,11 +44,14 @@ class DataMigrationPlan(Document):
 
 						if '.' in  source_field:
 							arr = source_field.split('.')
-							join_data = source_connector.get_join_objects(mapping.source_objectname, arr, source.get('id'))
+							join_data = source_connector.get_join_objects(mapping.source_objectname, field, source.get('id'))
 
-							target.set(field.target_fieldname, join_data[0][arr[2]])
+							target.set(field.target_fieldname, join_data[0][arr[1]])
 						else:
 							target.set(field.target_fieldname, source.get(source_field))
+
+						if field.formula:
+							print field.formula
 
 					# post process
 					if mapping.post_process:
@@ -80,11 +83,11 @@ def migrate(plan):
 
 @frappe.whitelist()
 def make_custom_fields(dt):
-	field = frappe.db.get_value("Custom Field", {"dt": dt, "fieldname": 'primary_key'})
+	field = frappe.db.get_value("Custom Field", {"dt": dt, "fieldname": 'migration_key'})
 	if not field:
 		create_custom_field(dt, {
-			'label': 'Primary Key',
-			'fieldname': 'primary_key',
+			'label': 'Migration Key',
+			'fieldname': 'migration_key',
 			'fieldtype': 'Data',
 			'hidden': 1,
 			'read_only': 1,
