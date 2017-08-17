@@ -4,6 +4,7 @@
 
 from __future__ import unicode_literals
 import frappe
+import time
 from frappe.model.document import Document
 from frappe.custom.doctype.custom_field.custom_field import create_custom_field
 from frappe import _
@@ -16,6 +17,8 @@ class DataMigrationPlan(Document):
 		for x in self.apps:
 			# Can be used to bundle together mappings
 			app = frappe.get_doc('Data Migration App', x.app)
+			time.sleep(5)
+			# frappe.timeout(3)
 
 			for d in app.mappings:
 				# iterating through each mappings
