@@ -10,8 +10,8 @@ from frappe import _
 
 class DataMigrationPlan(Document):
 	def migrate(self):
-		source_connector = frappe.get_doc('Data Migration Connector', self.source_connector)
-		source_connector.connect()
+		self.source_connector = frappe.get_doc('Data Migration Connector', self.source_connector)
+		self.source_connector.connect()
 
 		for x in self.apps:
 			# Can be used to bundle together mappings
@@ -20,40 +20,19 @@ class DataMigrationPlan(Document):
 			for d in app.mappings:
 				# iterating through each mappings
 				self.mapping = frappe.get_doc('Data Migration Mapping', d.mapping)
-				data = source_connector.get_objects(self.mapping.source_objectname, self.mapping.condition, "*")
+				data = self.source_connector.get_objects(self.mapping.source_objectname, self.mapping.condition, "*")
 				self.make_custom_fields(self.mapping.target_doctype) # Creating a custom field for primary key
 
-				for i, source in enumerate(data):
+				# pre process
+				if self.mapping.pre_process:
+					exec self.mapping.pre_process in locals()
+
+				for i, self.source in enumerate(data):
 					# Fetchnig the appropriate doctype
-					target = self.fetch_doctype(source)
+					target = self.fetch_doctype()
+					target.set('migration_key', self.source.get('id')) # Setting migration key
 
-					target.set('migration_key', source.get('id')) # Setting migration key
-
-					# Iterating through each field to map
-					for field in self.mapping.mapping_details:
-						source_field = field.source_fieldname
-
-						# If source field contains a dot linkage, then its a foreign key relation
-						if '.' in  source_field:
-							arr = source_field.split('.')
-							join_data = source_connector.get_join_objects(self.mapping.source_objectname, field, source.get('id'))
-
-							if len(join_data) > 1:
-								join_data = join_data[0:1] # ManyToOne mapping, taking the first value only
-
-							target.set(field.target_fieldname, join_data[0][arr[1]])
-						else:
-							# Else its a simple column to column mapping
-							target.set(field.target_fieldname, frappe.as_unicode(source.get(source_field)))
-
-					# post process
-					if self.mapping.post_process:
-						exec self.mapping.post_process in locals()
-
-					try:
-						target.save()
-					except frappe.DuplicateEntryError:
-						target.save()
+					self.store_mapped_data(target) # fetching data and storing it appropriately
 
 					frappe.publish_progress(float(i)*100/len(data),
 						title = _('Migrating {0}').format(target.doctype), doctype=self.doctype, docname=self.name)
@@ -61,6 +40,35 @@ class DataMigrationPlan(Document):
 
 				frappe.publish_progress(100,
 					title = _('Migrating {0}').format(target.doctype), doctype=self.doctype, docname=self.name)
+
+	def store_mapped_data(self, target):
+		""" mapping source field to target field """
+		# Iterating through each field to map
+		for field in self.mapping.mapping_details:
+			source_field = field.source_fieldname
+
+			# If source field contains a dot linkage, then its a foreign key relation
+			if '.' in  source_field:
+				arr = source_field.split('.')
+				join_data = self.source_connector.get_join_objects(self.mapping.source_objectname, field, self.source.get('id'))
+
+				if len(join_data) > 1:
+					join_data = join_data[0:1] # ManyToOne mapping, taking the first value only
+
+				target.set(field.target_fieldname, join_data[0][arr[1]])
+			else:
+				# Else its a simple column to column mapping
+				target.set(field.target_fieldname, frappe.as_unicode(self.source.get(source_field)))
+
+		# post process
+		if self.mapping.post_process:
+			exec self.mapping.post_process in locals()
+
+		try:
+			target.save()
+		except frappe.DuplicateEntryError:
+			target.save()
+
 
 	def make_custom_fields(self, dt):
 		""" Adding custom field for primary key """
@@ -75,9 +83,9 @@ class DataMigrationPlan(Document):
 				'unique': 1,
 			})
 
-	def fetch_doctype(self, source):
+	def fetch_doctype(self):
 		""" Returns correct doctype type - new or existing """
-		flag = frappe.db.get_value(self.mapping.target_doctype, {'migration_key': source.get('id')})
+		flag = frappe.db.get_value(self.mapping.target_doctype, {'migration_key': self.source.get('id')})
 
 		if flag:
 			# If it is, then fetch that docktype
@@ -85,7 +93,7 @@ class DataMigrationPlan(Document):
 		else:
 			# If not, then check if a data by that name already exist or not
 			primary_name = self.mapping.mapping_details[0].target_fieldname
-			primary_value = source.get(self.mapping.mapping_details[0].source_fieldname)
+			primary_value = self.source.get(self.mapping.mapping_details[0].source_fieldname)
 
 			flag_2 = frappe.db.get_value(self.mapping.target_doctype, {primary_name: primary_value})
 
@@ -96,11 +104,11 @@ class DataMigrationPlan(Document):
 				#  Else create a new doctype for current data object
 				return frappe.new_doc(self.mapping.target_doctype)
 
+	def clean_data(self, doctype, condition):
+		frappe.db.sql("""delete from `tab{0}`{1}""".format(doctype, condition)) # Incase default frappe data needs to be deleted
+
 @frappe.whitelist()
 def migrate(plan):
-# 	frappe.enqueue(_migrate, plan=plan)
-
-# def _migrate(plan):
 	plan = frappe.get_doc('Data Migration Plan', plan)
 	plan.migrate()
 
