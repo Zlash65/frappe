@@ -189,12 +189,12 @@ _f.Frm.prototype.set_cur_list = function(doctype) {
 				frappe.cur_list = r.message.cur_list;
 			}
 		}
-	})
+	});
 };
 
 _f.Frm.prototype.next_doc = function(data, doctype) {
 	if(!frappe.cur_list){
-		this.set_cur_list(doctype)
+		this.set_cur_list(doctype);
 	}
 	var x = frappe.cur_list.indexOf(data);
 
@@ -206,7 +206,7 @@ _f.Frm.prototype.next_doc = function(data, doctype) {
 
 _f.Frm.prototype.previous_doc = function(data, doctype) {
 	if(!frappe.cur_list){
-		this.set_cur_list(doctype)
+		this.set_cur_list(doctype);
 	}
 	var x = frappe.cur_list.indexOf(data);
 
