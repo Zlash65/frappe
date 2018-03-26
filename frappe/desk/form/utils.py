@@ -113,3 +113,15 @@ def get_next(doctype, value, prev, filters=None, order_by="modified desc"):
 	else:
 		return res[0][0]
 
+@frappe.whitelist()
+def mark_as_read(doctype, docnames, mark_all):
+	docnames = frappe.parse_json(docnames)
+	if int(mark_all) == 1:
+		names = frappe.db.sql(""" select name from `tab{0}` \
+			td where (td._seen is null) or (td._seen not like "%{1}%") \
+			""".format(doctype, frappe.session.user), as_dict=1)
+		docnames = [d.name for d in names]
+
+	for name in docnames:
+		doc = frappe.get_doc(doctype, name)
+		doc.add_seen()

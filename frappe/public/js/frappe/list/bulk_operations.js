@@ -197,4 +197,34 @@ export default class BulkOperations {
 		dialog.refresh();
 		dialog.show();
 	}
+
+	mark_as_read(docnames, done) {
+		const dialog = new frappe.ui.Dialog({
+			title: __('Mark as read'),
+			fields: [
+				{
+					'fieldtype': 'Check',
+					'label': __('Mark All'),
+					'fieldname': 'mark_all'
+				}
+			],
+			primary_action: ({ mark_all }) => {
+				frappe.call({
+					method: 'frappe.desk.form.utils.mark_as_read',
+					args: {
+						doctype: this.doctype,
+						docnames: docnames,
+						mark_all: mark_all
+					}
+				}).then(r => {
+					done();
+					dialog.hide();
+				});
+			},
+			primary_action_label: __('Update')
+		});
+
+		dialog.refresh();
+		dialog.show();
+	}
 }
