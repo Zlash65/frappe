@@ -761,7 +761,7 @@ def verify_password(password):
 	frappe.local.login_manager.check_password(frappe.session.user, password)
 
 @frappe.whitelist(allow_guest=True)
-def sign_up(email, full_name, redirect_to):
+def sign_up(email, full_name, username, redirect_to):
 	if not is_signup_enabled():
 		frappe.throw(_('Sign Up is disabled'), title='Not Allowed')
 
@@ -784,12 +784,14 @@ def sign_up(email, full_name, redirect_to):
 			"doctype":"User",
 			"email": email,
 			"first_name": full_name,
+			"username": username,
 			"enabled": 1,
 			"new_password": random_string(10),
 			"user_type": "Website User"
 		})
 		user.flags.ignore_permissions = True
 		user.insert()
+		user.add_roles('Trading User')
 
 		# set default signup role as per Portal Settings
 		default_role = frappe.db.get_value("Portal Settings", None, "default_role")
@@ -799,10 +801,51 @@ def sign_up(email, full_name, redirect_to):
 		if redirect_to:
 			frappe.cache().hset('redirect_after_login', user.name, redirect_to)
 
+		# create user profile and user permission for the user
+		create_user_profile(user)
+
 		if user.flags.email_sent:
 			return 1, _("Please check your email for verification")
 		else:
 			return 2, _("Please ask your administrator to verify your sign-up")
+
+@frappe.whitelist(allow_guest=True)
+def create_user_profile(user):
+	frappe.session.user = "Administrator"
+	up = frappe.get_doc({
+		"doctype": "User Profile",
+		"email": user.email,
+		"username": user.username,
+		"first_name": user.first_name,
+		"full_name": user.full_name
+	})
+	up.flags.ignore_permissions = True
+	up.insert()
+	setup_user_permission(user, up)
+	create_chat_room(user)
+
+@frappe.whitelist()
+def create_chat_room(user):
+	from frappe.chat.doctype.chat_room.chat_room import create
+	from frappe.chat.doctype.chat_message.chat_message import send
+	room = create('Direct', 'trading_bot@hackathon.com', user.name)
+	send('trading_bot@hackathon.com', user.name, "Welcome to SpeedForce Trading")
+
+@frappe.whitelist(allow_guest=True)
+def setup_user_permission(user, up):
+	frappe.get_doc({
+		'doctype': 'User Permission',
+		"user": user.name,
+		"allow": "User",
+		"for_value": user.name
+	}).insert()
+
+	frappe.get_doc({
+		'doctype': 'User Permission',
+		"user": user.name,
+		"allow": "User Profile",
+		"for_value": up.name
+	}).insert()
 
 @frappe.whitelist(allow_guest=True)
 def reset_password(user):

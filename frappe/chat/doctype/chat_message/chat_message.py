@@ -89,6 +89,7 @@ def sanitize_message_content(content):
 
 def get_new_chat_message_doc(user, room, content, type = "Content", link = True):
 	user = get_user_doc(user)
+	print(room)
 	room = frappe.get_doc('Chat Room', room)
 
 	meta = get_message_meta(content)
@@ -131,7 +132,7 @@ def get_new_chat_message(user, room, content, type = "Content"):
 @frappe.whitelist(allow_guest = True)
 def send(user, room, content, type = "Content"):
 	mess = get_new_chat_message(user, room, content, type)
-	
+	print(mess)
 	frappe.publish_realtime('frappe.chat.message:create', mess, room = room,
 		after_commit = True)
 

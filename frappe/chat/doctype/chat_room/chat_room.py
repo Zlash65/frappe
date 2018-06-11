@@ -21,20 +21,20 @@ from frappe.chat.util import (
 session = frappe.session
 
 def is_direct(owner, other, bidirectional = False):
-	def get_room(owner, other):
-		room = frappe.get_all('Chat Room', filters = [
-			['Chat Room', 	   'type' , 'in', ('Direct', 'Visitor')],
-			['Chat Room', 	   'owner', '=' , owner],
-			['Chat Room User', 'user' , '=' , other]
-		], distinct = True)
-
-		return room
-
 	exists = len(get_room(owner, other)) == 1
 	if bidirectional:
 		exists = exists or len(get_room(other, owner)) == 1
 	
 	return exists
+
+def get_room(owner, other):
+	room = frappe.get_all('Chat Room', filters = [
+		['Chat Room', 	   'type' , 'in', ('Direct', 'Visitor')],
+		['Chat Room', 	   'owner', '=' , owner],
+		['Chat Room User', 'user' , '=' , other]
+	], distinct = True)
+
+	return room
 
 def get_chat_room_user_set(users, filter_ = None):
 	seen, uset = set(), list()

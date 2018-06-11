@@ -710,6 +710,7 @@ frappe.chat.room.create = function (kind, owner, users, name, fn) {
 	}
 
 	users    = frappe._.as_array(users)
+	console.log(kind, owner, users, name, fn);
 
 	return new Promise(resolve => {
 		frappe.call("frappe.chat.doctype.chat_room.chat_room.create",
