@@ -63,7 +63,7 @@ def apply_workflow(doc, action):
 	transitions = get_transitions(doc, workflow)
 	user = frappe.session.user
 
-	if not has_approval_access(user, doc):
+	if transition_status_change(doc) and not has_approval_access(user, doc):
 		frappe.throw(_("Self approval is not allowed"))
 
 	# find the transition
@@ -132,6 +132,24 @@ def validate_workflow(doc):
 		transition = [d for d in transitions if d.next_state == next_state]
 		if not transition:
 			frappe.throw(_('Workflow State {0} is not allowed').format(frappe.bold(next_state)), WorkflowPermissionError)
+
+@frappe.whitelist()
+def transition_status_change(doc):
+	''' returns those next states where doc_status is changing '''
+	doc = frappe.get_doc(frappe.parse_json(doc))
+	workflow = frappe.get_doc('Workflow', get_workflow_name(doc.doctype))
+	transitions = get_transitions(doc, workflow)
+
+	trans = []
+	for d in transitions:
+		trans.append(d.next_state)
+
+	change = []
+	for d in workflow.states:
+		if d.state in trans and cint(d.doc_status) > 0:
+			change.append(d.state)
+
+	return change or []
 
 def get_workflow(doctype):
 	return frappe.get_doc('Workflow', get_workflow_name(doctype))

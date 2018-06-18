@@ -59,6 +59,15 @@ frappe.ui.form.States = Class.extend({
 		// state text
 		const state = this.get_state();
 
+		// show actions from that state
+		this.show_actions(state);
+	},
+
+	show_actions: function() {
+		const me = this;
+
+		this.frm.page.clear_actions_menu();
+
 		let doctype = this.frm.doctype;
 
 		function has_approval_access() {
@@ -72,22 +81,24 @@ frappe.ui.form.States = Class.extend({
 			return approval_access;
 		}
 
-		if(state && has_approval_access()) {
-			// show actions from that state
-			this.show_actions(state);
-		}
-	},
-
-	show_actions: function() {
-		var added = false,
-			me = this;
-
-		this.frm.page.clear_actions_menu();
-
 		// if the loaded doc is dirty, don't show workflow buttons
 		if (this.frm.doc.__unsaved===1) {
 			return;
 		}
+
+		// check if there is a status change in transitioning
+		frappe.xcall('frappe.model.workflow.transition_status_change',
+			{doc: me.frm.doc})
+			.then((transitions) => {
+				if(!transitions || (transitions && has_approval_access()))
+					me.add_actions_options();
+			});
+
+	},
+
+	add_actions_options: function(added) {
+		const me = this;
+		var added = false;
 
 		frappe.workflow.get_transitions(this.frm.doc).then(transitions => {
 			$.each(transitions, function(i, d) {
