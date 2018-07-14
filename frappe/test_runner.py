@@ -24,7 +24,7 @@ def xmlrunner_wrapper(output):
 		return xmlrunner.XMLTestRunner(*args, **kwargs)
 	return _runner
 
-def main(app=None, module=None, doctype=None, verbose=False, tests=(),
+def main(app=None, module=None, doctype=None, verbose=True, tests=(),
 	force=False, profile=False, junit_xml_output=None, ui_tests=False, doctype_list_path=None):
 	global unittest_runner
 
@@ -88,7 +88,7 @@ def set_test_email_config():
 		"admin_password": "admin"
 	})
 
-def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False):
+def run_all_tests(app=None, verbose=True, profile=False, ui_tests=False):
 	import os
 
 	apps = [app] if app else frappe.get_installed_apps()
@@ -113,7 +113,7 @@ def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False):
 		pr = cProfile.Profile()
 		pr.enable()
 
-	out = unittest_runner(verbosity=1+(verbose and 1 or 0)).run(test_suite)
+	out = unittest_runner(verbosity=2).run(test_suite)
 
 	if profile:
 		pr.disable()
@@ -124,7 +124,7 @@ def run_all_tests(app=None, verbose=False, profile=False, ui_tests=False):
 
 	return out
 
-def run_tests_for_doctype(doctypes, verbose=False, tests=(), force=False, profile=False):
+def run_tests_for_doctype(doctypes, verbose=True, tests=(), force=False, profile=False):
 	modules = []
 	if not isinstance(doctypes, (list, tuple)):
 		doctypes = [doctypes]
@@ -144,7 +144,7 @@ def run_tests_for_doctype(doctypes, verbose=False, tests=(), force=False, profil
 
 	return _run_unittest(modules, verbose=verbose, tests=tests, profile=profile)
 
-def run_tests_for_module(module, verbose=False, tests=(), profile=False):
+def run_tests_for_module(module, verbose=True, tests=(), profile=False):
 	module = importlib.import_module(module)
 	if hasattr(module, "test_dependencies"):
 		for doctype in module.test_dependencies:
@@ -152,12 +152,12 @@ def run_tests_for_module(module, verbose=False, tests=(), profile=False):
 
 	return _run_unittest(module, verbose=verbose, tests=tests, profile=profile)
 
-def run_setup_wizard_ui_test(app=None, verbose=False, profile=False):
+def run_setup_wizard_ui_test(app=None, verbose=True, profile=False):
 	'''Run setup wizard UI test using test_test_runner'''
 	frappe.flags.run_setup_wizard_ui_test = 1
 	return run_ui_tests(app=app, test=None, verbose=verbose, profile=profile)
 
-def run_ui_tests(app=None, test=None, test_list=None, verbose=False, profile=False):
+def run_ui_tests(app=None, test=None, test_list=None, verbose=True, profile=False):
 	'''Run a single unit test for UI using test_test_runner'''
 	module = importlib.import_module('frappe.tests.ui.test_test_runner')
 	frappe.flags.ui_test_app = app
@@ -167,7 +167,7 @@ def run_ui_tests(app=None, test=None, test_list=None, verbose=False, profile=Fal
 		frappe.flags.ui_test_path = test
 	return _run_unittest(module, verbose=verbose, tests=(), profile=profile)
 
-def _run_unittest(modules, verbose=False, tests=(), profile=False):
+def _run_unittest(modules, verbose=True, tests=(), profile=False):
 	test_suite = unittest.TestSuite()
 
 	if not isinstance(modules, (list, tuple)):
@@ -189,7 +189,7 @@ def _run_unittest(modules, verbose=False, tests=(), profile=False):
 
 	frappe.flags.tests_verbose = verbose
 
-	out = unittest_runner(verbosity=1+(verbose and 1 or 0)).run(test_suite)
+	out = unittest_runner(verbosity=2).run(test_suite)
 
 
 	if profile:
@@ -239,7 +239,8 @@ def _add_test(app, path, filename, verbose, test_suite=None, ui_tests=False):
 
 	test_suite.addTest(unittest.TestLoader().loadTestsFromModule(module))
 
-def make_test_records(doctype, verbose=0, force=False):
+def make_test_records(doctype, verbose=1, force=False):
+	print(doctype, "------")
 	if not frappe.db:
 		frappe.connect()
 
@@ -285,7 +286,7 @@ def get_dependencies(doctype):
 
 	return options_list
 
-def make_test_records_for_doctype(doctype, verbose=0, force=False):
+def make_test_records_for_doctype(doctype, verbose=1, force=False):
 	if not force and doctype in get_test_record_log():
 		return
 
@@ -313,7 +314,7 @@ def make_test_records_for_doctype(doctype, verbose=0, force=False):
 def make_test_objects(doctype, test_records=None, verbose=None, reset=False):
 	'''Make test objects from given list of `test_records` or from `test_records.json`'''
 	records = []
-
+	print(doctype)
 	def revert_naming(d):
 		if getattr(d, 'naming_series', None):
 			revert_series_if_last(d.naming_series, d.name)
