@@ -122,13 +122,13 @@ class setup_docs(object):
 			ignore_errors=True)
 		shutil.rmtree(os.path.join(self.docs_path, 'assets'),
 			ignore_errors=True)
-		shutil.copytree(os.path.join(self.app_path, 'docs', 'user'),
+		shutil.copytree(os.path.join(self.app_path, 'www/docs', 'user'),
 			os.path.join(self.docs_path, 'user'))
-		shutil.copytree(os.path.join(self.app_path, 'docs', 'assets'),
+		shutil.copytree(os.path.join(self.app_path, 'www/docs', 'assets'),
 			frappe.get_app_path(self.target_app, 'www', 'docs', 'assets'))
 
 		# copy index
-		shutil.copy(os.path.join(self.app_path, 'docs', 'index.md'),
+		shutil.copy(os.path.join(self.app_path, 'www/docs', 'index.md'),
 			frappe.get_app_path(self.target_app, 'www', 'docs'))
 
 	def make_home_pages(self):
