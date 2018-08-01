@@ -55,10 +55,10 @@ def main(app=None, module=None, doctype=None, verbose=True, tests=(),
 		frappe.utils.scheduler.disable_scheduler()
 		set_test_email_config()
 
-		if verbose:
-			print('Running "before_tests" hooks')
-		for fn in frappe.get_hooks("before_tests", app_name=app):
-			frappe.get_attr(fn)()
+		# if verbose:
+		# 	print('Running "before_tests" hooks')
+		# for fn in frappe.get_hooks("before_tests", app_name=app):
+		# 	frappe.get_attr(fn)()
 
 		if doctype:
 			ret = run_tests_for_doctype(doctype, verbose, tests, force, profile)
@@ -139,7 +139,7 @@ def run_tests_for_doctype(doctypes, verbose=True, tests=(), force=False, profile
 		if force:
 			for name in frappe.db.sql_list("select name from `tab%s`" % doctype):
 				frappe.delete_doc(doctype, name, force=True)
-		make_test_records(doctype, verbose=verbose, force=force)
+		# make_test_records(doctype, verbose=verbose, force=force)
 		modules.append(importlib.import_module(test_module))
 
 	return _run_unittest(modules, verbose=verbose, tests=tests, profile=profile)
