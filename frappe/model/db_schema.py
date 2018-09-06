@@ -49,7 +49,8 @@ type_map = {
 	'Signature':		('longtext', ''),
 	'Color':		('varchar', varchar_len),
 	'Barcode':		('longtext', ''),
-	'Geolocation':		('longtext', '')
+	'Geolocation':		('longtext', ''),
+	'Qr Code':		('longtext', '')
 }
 
 default_columns = ['name', 'creation', 'modified', 'modified_by', 'owner',
