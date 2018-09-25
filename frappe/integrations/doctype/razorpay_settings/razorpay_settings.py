@@ -24,8 +24,8 @@ Example:
 		"description": "payment via cart",
 		"reference_doctype": "Payment Request",
 		"reference_docname": "PR0001",
-		"payer_email": "NuranVerkleij@example.com",
-		"payer_name": "Nuran Verkleij",
+		"payer_email": "NeptuniaAquaria@example.com",
+		"payer_name": "Neptunia Aquaria",
 		"order_id": "111",
 		"currency": "INR",
 		"payment_gateway": "Razorpay"
