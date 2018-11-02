@@ -39,6 +39,7 @@ class PostgresDatabase(Database):
 			'Small Text':	('text', ''),
 			'Long Text':	('text', ''),
 			'Code':			('text', ''),
+			'Code Editor':	('text', ''),
 			'Text Editor':	('text', ''),
 			'Date':			('date', ''),
 			'Datetime':		('timestamp', None),

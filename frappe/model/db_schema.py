@@ -33,6 +33,7 @@ type_map = {
 	'Small Text':		('text', ''),
 	'Long Text':		('longtext', ''),
 	'Code':			('longtext', ''),
+	'Code Editor':		('longtext', ''),
 	'Text Editor':		('longtext', ''),
 	'HTML Editor':		('longtext', ''),
 	'Date':			('date', ''),

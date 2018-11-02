@@ -34,6 +34,7 @@ class MariaDBDatabase(Database):
 			'Small Text':	('text', ''),
 			'Long Text':	('longtext', ''),
 			'Code':			('longtext', ''),
+			'Code Editor':	('longtext', ''),
 			'Text Editor':	('longtext', ''),
 			'Date':			('date', ''),
 			'Datetime':		('datetime', '6'),
