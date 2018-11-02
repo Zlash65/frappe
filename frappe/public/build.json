@@ -80,6 +80,7 @@
 		"public/js/frappe/form/controls/autocomplete.js",
 		"public/js/frappe/form/controls/barcode.js",
 		"public/js/frappe/form/controls/geolocation.js",
+		"public/js/frappe/form/controls/code_editor.js",
 		"public/js/frappe/form/controls/multiselect.js",
 		"public/js/frappe/form/controls/multicheck.js"
 	],
@@ -140,6 +141,10 @@
 		"public/js/lib/leaflet/leaflet.draw.js",
 		"public/js/lib/leaflet/L.Control.Locate.js",
 		"public/js/lib/leaflet/easy-button.js"
+	],
+	"concat:js/ace.min.js": [
+		"public/js/lib/ace/ace.min.js",
+		"public/js/lib/ace/mode-javascript.js"
 	],
 	"js/desk.min.js": [
 		"public/js/frappe/class.js",
