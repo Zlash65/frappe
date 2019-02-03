@@ -44,6 +44,7 @@ frappe.upload = {
 		// restrict to images
 		if (opts.restrict_to_images) {
 			$file_input.prop('accept', 'image/*');
+			opts.optionss = "";
 		}
 
 		// dropzone upload
@@ -74,6 +75,14 @@ frappe.upload = {
 					fileobjs = $upload.find(":file").get(0).files;
 				}
 				var file_array = $.makeArray(fileobjs);
+
+				// validate filetype
+				var valid_types = opts.options.split('\n');
+				file_array.map(file => {
+					if(!valid_types.includes(file.name.split('.').pop())) {
+						frappe.throw(__('Please upload a valid file. Valid filetypes - ') + valid_types.join(', '));
+					}
+				});
 
 				$upload.find(".web-link-wrapper").addClass("hidden");
 				$upload.find(".btn-browse").removeClass("btn-primary").addClass("btn-default");
